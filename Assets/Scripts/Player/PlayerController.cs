@@ -2,11 +2,12 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using static UnityEditor.Experimental.GraphView.GraphView;
 
 public class PlayerController : MonoBehaviour
 {
      [Header("Movement")]
-    public float moveSpeed;
+    public float moveSpeed = 5f;
     public float jumpPower;
     private Vector2 curMovementInput;
     public LayerMask groundLayerMask;
@@ -21,10 +22,12 @@ public class PlayerController : MonoBehaviour
     private Vector2 mouseDelta;
 
     private Rigidbody _rigidbody;
+    private PlayerCondition _playerCondition;
 
     private void Awake()
     {
         _rigidbody = GetComponent<Rigidbody>();
+        _playerCondition = GetComponent<PlayerCondition>();
     }
 
     void Start()
@@ -35,6 +38,7 @@ public class PlayerController : MonoBehaviour
     {
         Move();
     }
+
     private void LateUpdate()
     {
         CameraLook();
@@ -50,7 +54,7 @@ public class PlayerController : MonoBehaviour
     }
 
     void CameraLook()
-    {
+    {   
         camCurXRot += mouseDelta.y * lookSensitivity;
         camCurXRot = Mathf.Clamp(camCurXRot, minXLook, maxXLook);
 
@@ -64,8 +68,9 @@ public class PlayerController : MonoBehaviour
         {
             maxXLook = 50.0f;
             cameraContainer.eulerAngles += new Vector3(0, mouseDelta.x * lookSensitivity, 0);
-            cameraContainer.localEulerAngles = new Vector3(-camCurXRot, cameraContainer.eulerAngles.y - transform.eulerAngles.y, 0);
+            
         }
+        cameraContainer.localEulerAngles = new Vector3(-camCurXRot, cameraContainer.eulerAngles.y - transform.eulerAngles.y, 0);
     }
 
     public void OnMove(InputAction.CallbackContext context)
@@ -112,7 +117,23 @@ public class PlayerController : MonoBehaviour
                 return true;
             }
         }
-
         return false;
+    }
+    public void ItemEffect(ItemData data)
+    {
+        if (data.displayName == "체력회복의 돌")
+        {
+            _playerCondition.Heal(10.0f);
+        }
+        else if (data.displayName == "스피드의 돌")
+        {
+            StartCoroutine(MultiplyMoveSpeed());
+        }
+    }
+    private IEnumerator MultiplyMoveSpeed()
+    {
+        moveSpeed *= 2;
+        yield return new WaitForSeconds(4f);
+        moveSpeed /= 2;
     }
 }

@@ -15,8 +15,6 @@ public class Interaction : MonoBehaviour
     public GameObject curInteractGameObject;
     private ItemObject curInteractable;
 
-    public GameObject nullGameObject;
-
     public TextMeshProUGUI promptText;
 
     public Image promptHealSprite;
@@ -36,17 +34,12 @@ public class Interaction : MonoBehaviour
         {
             lastCheckTime = Time.time;
 
-            if (curInteractGameObject == null)
-            {
-                curInteractGameObject = nullGameObject;
-            }
-
             Ray ray = camera.ScreenPointToRay(new Vector3(Screen.width / 2, Screen.height / 2));
             RaycastHit hit;
 
             if (Physics.Raycast(ray, out hit, maxCheckDistance, layerMask))
             {
-                if (hit.collider.gameObject.layer == 7) //hit.collider.gameObject != curInteractGameObject
+                if (hit.collider.gameObject != curInteractGameObject) 
                 {
                     curInteractGameObject = hit.collider.gameObject;
                     curInteractable = hit.collider.GetComponent<ItemObject>();
@@ -83,6 +76,7 @@ public class Interaction : MonoBehaviour
         if (context.phase == InputActionPhase.Started && curInteractable != null)
         {
             curInteractable.OnInteract();
+            curInteractable.ItemEffect();
             curInteractGameObject = null;
             curInteractable = null;
             promptText.gameObject.SetActive(false);

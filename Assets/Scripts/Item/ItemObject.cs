@@ -6,10 +6,14 @@ public interface IInteractable
 {
     public string GetInteractPrompt();
     public void OnInteract();
+    public void ItemEffect();
 }
 public class ItemObject : MonoBehaviour
 {
     public ItemData data;
+    public Player _player;
+
+    private Coroutine coroutine;
 
     public string GetInteractPrompt()
     {
@@ -24,4 +28,8 @@ public class ItemObject : MonoBehaviour
         Destroy(gameObject);
     }
 
+    public void ItemEffect()
+    {
+        _player.controller.ItemEffect(data);
+    }
 }
