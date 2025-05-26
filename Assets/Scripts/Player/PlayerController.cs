@@ -11,15 +11,8 @@ public class PlayerController : MonoBehaviour
     public float jumpPower;
     private Vector2 curMovementInput;
     public LayerMask groundLayerMask;
-    private bool isMove;
 
-    [Header("Look")]
-    public Transform cameraContainer;
-    public float minXLook;
-    private float maxXLook;
-    private float camCurXRot;
-    public float lookSensitivity;
-    private Vector2 mouseDelta;
+    private CameraController _cameraController;
 
     private Rigidbody _rigidbody;
     private PlayerCondition _playerCondition;
@@ -28,6 +21,7 @@ public class PlayerController : MonoBehaviour
     {
         _rigidbody = GetComponent<Rigidbody>();
         _playerCondition = GetComponent<PlayerCondition>();
+        _cameraController = GetComponent<CameraController>();
     }
 
     void Start()
@@ -39,38 +33,12 @@ public class PlayerController : MonoBehaviour
         Move();
     }
 
-    private void LateUpdate()
-    {
-        CameraLook();
-    }
-
     void Move()
     {
         Vector3 dir = transform.forward * curMovementInput.y + transform.right * curMovementInput.x;
         dir *= moveSpeed;
         dir.y = _rigidbody.velocity.y;
         _rigidbody.velocity = dir;
-
-    }
-
-    void CameraLook()
-    {   
-        camCurXRot += mouseDelta.y * lookSensitivity;
-        camCurXRot = Mathf.Clamp(camCurXRot, minXLook, maxXLook);
-
-        if (isMove)
-        {
-            maxXLook = 85.0f;
-            transform.eulerAngles += new Vector3(0, mouseDelta.x * lookSensitivity, 0);
-            cameraContainer.localEulerAngles = new Vector3(-camCurXRot, 0, 0);
-        }
-        else
-        {
-            maxXLook = 50.0f;
-            cameraContainer.eulerAngles += new Vector3(0, mouseDelta.x * lookSensitivity, 0);
-            
-        }
-        cameraContainer.localEulerAngles = new Vector3(-camCurXRot, cameraContainer.eulerAngles.y - transform.eulerAngles.y, 0);
     }
 
     public void OnMove(InputAction.CallbackContext context)
@@ -78,19 +46,16 @@ public class PlayerController : MonoBehaviour
         if (context.phase == InputActionPhase.Performed)
         {
             curMovementInput = context.ReadValue<Vector2>();
-            isMove = true;
+            _cameraController.isMove = true;
         }
         else if(context.phase == InputActionPhase.Canceled)
         {
             curMovementInput = Vector2.zero;
-            isMove = false;
+            _cameraController.isMove = false;
         }
     }
 
-    public void OnLook(InputAction.CallbackContext context)
-    {
-        mouseDelta = context.ReadValue<Vector2>();
-    }
+    
 
     public void OnJump(InputAction.CallbackContext context)
     {
