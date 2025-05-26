@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.TextCore.Text;
 using static UnityEditor.Experimental.GraphView.GraphView;
 
 public class PlayerController : MonoBehaviour
@@ -12,7 +13,14 @@ public class PlayerController : MonoBehaviour
     private Vector2 curMovementInput;
     public LayerMask groundLayerMask;
 
-    private CameraController _cameraController;
+    [Header("Look")]
+    public Transform cameraContainer;
+    public float minXLook;
+    private float maxXLook;
+    private float camCurXRot;
+    public float lookSensitivity;
+    private Vector2 mouseDelta;
+    private bool isMove;
 
     private Rigidbody _rigidbody;
     private PlayerCondition _playerCondition;
@@ -21,7 +29,6 @@ public class PlayerController : MonoBehaviour
     {
         _rigidbody = GetComponent<Rigidbody>();
         _playerCondition = GetComponent<PlayerCondition>();
-        _cameraController = GetComponent<CameraController>();
     }
 
     void Start()
@@ -31,6 +38,11 @@ public class PlayerController : MonoBehaviour
     void FixedUpdate()
     {
         Move();
+    }
+
+    private void LateUpdate()
+    {
+        CameraLook();
     }
 
     void Move()
@@ -46,16 +58,19 @@ public class PlayerController : MonoBehaviour
         if (context.phase == InputActionPhase.Performed)
         {
             curMovementInput = context.ReadValue<Vector2>();
-            _cameraController.isMove = true;
+            isMove = true;
         }
         else if(context.phase == InputActionPhase.Canceled)
         {
             curMovementInput = Vector2.zero;
-            _cameraController.isMove = false;
+            isMove = false;
         }
     }
 
-    
+    public void OnLook(InputAction.CallbackContext context)
+    {
+        mouseDelta = context.ReadValue<Vector2>();
+    }
 
     public void OnJump(InputAction.CallbackContext context)
     {
@@ -64,7 +79,25 @@ public class PlayerController : MonoBehaviour
             _rigidbody.AddForce(Vector2.up * jumpPower, ForceMode.Impulse); //점프; 빠르게 받는 물리값
         }
     }
+    void CameraLook()
+    {
+        camCurXRot += mouseDelta.y * lookSensitivity;
+        camCurXRot = Mathf.Clamp(camCurXRot, minXLook, maxXLook);
 
+        if (isMove)
+        {
+            maxXLook = 85.0f;
+            transform.eulerAngles += new Vector3(0, mouseDelta.x * lookSensitivity, 0);
+            cameraContainer.localEulerAngles = new Vector3(-camCurXRot, 0, 0);
+        }
+        else
+        {
+            maxXLook = 50.0f;
+            cameraContainer.eulerAngles += new Vector3(0, mouseDelta.x * lookSensitivity, 0);
+
+        }
+        cameraContainer.localEulerAngles = new Vector3(-camCurXRot, cameraContainer.eulerAngles.y - transform.eulerAngles.y, 0);
+    }
     bool IsGrounded()
     {
         Ray[] rays = new Ray[4]
